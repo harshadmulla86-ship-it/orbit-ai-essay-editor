@@ -1,0 +1,6 @@
+CREATE TABLE essays (
+  id SERIAL PRIMARY KEY,
+  text TEXT NOT NULL,
+  result JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,36 @@
+# 🚀 Orbit AI Essay Editor
+
+An AI-powered essay writing and feedback web app built with **React + Flask + SQLite**.
+
+### ✨ Features
+- Real-time essay analysis (score, readability, tone)
+- Save & view previous essays
+- Light/Dark mode toggle
+- Responsive, interview-ready UI
+- Local database with `SQLite`
+- Optional GPT-based analysis (OpenAI API)
+
+---
+
+### 🧱 Architecture
+**Frontend:** React (Vite + Tailwind CSS)  
+**Backend:** Flask (Python)  
+**Database:** SQLite  
+**AI Engine:** Custom heuristic / OpenAI GPT optional  
+**Deployment:** Render or localhost (ngrok for demo)
+
+---
+
+### ⚙️ Run locally
+```bash
+# 1️⃣ Backend
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+flask run
+
+# 2️⃣ Frontend
+cd frontend
+npm install
+npm run dev
