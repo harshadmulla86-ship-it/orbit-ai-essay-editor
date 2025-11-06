@@ -1,105 +1,264 @@
-import React, { useEffect, useState } from 'react'
-import Header from './components/Header'
-import EssayEditor from './components/EssayEditor'
-import FeedbackPanel from './components/FeedbackPanel'
-import axios from 'axios'
-import toast from 'react-hot-toast'
+import React, { useState, useEffect, useRef } from "react";
+import ReactQuill from "react-quill";
+import "quill/dist/quill.snow.css";
+import "./App.css";
 
 export default function App() {
-  const [essay, setEssay] = useState(localStorage.getItem('essayContent') || '')
-  const [analysis, setAnalysis] = useState(null)
-  const [loadingAnalysis, setLoadingAnalysis] = useState(false)
-  const [dark, setDark] = useState(localStorage.getItem('dark') === '1')
+  const [value, setValue] = useState(""); // HTML content
+  const [analysis, setAnalysis] = useState(null);
+  const [rephrased, setRephrased] = useState(null);
+  const [grammarInfo, setGrammarInfo] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dark, setDark] = useState(localStorage.getItem("theme") === "dark");
+  const quillRef = useRef(null);
 
+  // load draft
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('dark', dark ? '1' : '0')
-  }, [dark])
+    const saved = localStorage.getItem("draft_html");
+    if (saved) setValue(saved);
+  }, []);
 
+  // autosave (HTML)
   useEffect(() => {
-    // initial analysis if there is content
-    if (essay && essay.replace(/<(.|\n)*?>/g, '').trim().length > 0) {
-      analyze(essay)
+    const t = setInterval(() => {
+      localStorage.setItem("draft_html", value);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [value]);
+
+  // theme
+  useEffect(() => {
+    if (dark) document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
+
+  const plainText = (html) => {
+    // minimal HTML -> plain text
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html || "";
+    return tmp.textContent || tmp.innerText || "";
+  };
+
+  const wordCount = (plainText(value) || "").trim() ? plainText(value).trim().split(/\s+/).length : 0;
+  const charCount = (plainText(value) || "").length;
+
+  // API helpers
+  async function postJSON(path, body) {
+    const res = await fetch(`/api/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+
+  // Analyze
+  const handleAnalyze = async () => {
+    const text = plainText(value);
+    if (!text.trim()) {
+      alert("Write something to analyze.");
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function analyze(htmlContent) {
-    setLoadingAnalysis(true)
+    setLoading(true);
     try {
-      const plain = htmlContent.replace(/<(.|\n)*?>/g, '').trim()
-      const res = await axios.post('/api/analyze', { text: plain })
-      setAnalysis(res.data)
+      const data = await postJSON("analyze", { text });
+      setAnalysis(data);
     } catch (err) {
-      console.error(err)
-      toast.error('Failed to analyze essay (mock server).')
+      console.error("analyze err", err);
+      alert("Analyze failed.");
     } finally {
-      setLoadingAnalysis(false)
+      setLoading(false);
     }
-  }
+  };
 
-  function handleEssayChange(html) {
-    setEssay(html)
-    localStorage.setItem('essayContent', html)
-  }
-
-  async function handleQuickAnalyze() {
-    if (!essay || essay.replace(/<(.|\n)*?>/g, '').trim().length === 0) {
-      toast('Write something to analyze.', { icon: '✍️' })
-      return
+  // Rephrase
+  const handleRephrase = async () => {
+    const text = plainText(value);
+    if (!text.trim()) {
+      alert("Enter text to rephrase.");
+      return;
     }
-    await analyze(essay)
-    toast.success('Analysis complete')
-  }
-
-  async function handleRephrase(paragraphText) {
-    // call rephrase endpoint
-    const t = toast.loading('Rephrasing...')
+    setLoading(true);
     try {
-      const res = await axios.post('/api/rephrase', { text: paragraphText })
-      toast.success('Rephrased', { id: t })
-      return res.data.rephrase
+      const data = await postJSON("rephrase", { text });
+      setRephrased(data.rephrased || null);
     } catch (err) {
-      toast.error('Rephrase failed', { id: t })
-      return paragraphText
+      console.error("rephrase err", err);
+      alert("Rephrase failed.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  // Grammar fix — apply corrected text back into editor HTML (preserve as plain paragraph)
+  const handleGrammar = async () => {
+    const text = plainText(value);
+    if (!text.trim()) {
+      alert("Enter text for grammar correction.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await postJSON("grammar", { text });
+      // set corrected plain text into the editor as plain paragraph (safe)
+      const correctedPlain = data.corrected || text;
+      setValue(`<p>${correctedPlain.replace(/\n/g, "<br/>")}</p>`);
+      setGrammarInfo(data);
+      alert("Grammar corrected and applied into editor.");
+    } catch (err) {
+      console.error("grammar err", err);
+      alert("Grammar fix failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Summarize
+  const handleSummarize = async () => {
+    const text = plainText(value);
+    if (!text.trim()) { alert("Enter text to summarize."); return; }
+    setLoading(true);
+    try {
+      const data = await postJSON("summarize", { text });
+      setSummary(data.summary || "");
+    } catch (err) {
+      console.error("summarize err", err);
+      alert("Summarize failed.");
+    } finally { setLoading(false); }
+  };
+
+  // Tone transform
+  const handleTone = async (tone) => {
+    const text = plainText(value);
+    if (!text.trim()) { alert("Enter text to transform."); return; }
+    setLoading(true);
+    try {
+      const data = await postJSON("transform", { text, tone });
+      const transformed = data.transformed || text;
+      setValue(`<p>${transformed.replace(/\n/g, "<br/>")}</p>`);
+      alert(`Tone transformed to ${tone}.`);
+    } catch (err) {
+      console.error("transform err", err);
+      alert("Tone transform failed.");
+    } finally { setLoading(false); }
+  };
+
+  // Download as txt
+  const handleDownload = () => {
+    const plain = plainText(value);
+    const blob = new Blob([plain], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "essay.txt";
+    a.click();
+  };
+
+  // Copy rephrased option
+  const copyTextToClipboard = async (txt) => {
+    try {
+      await navigator.clipboard.writeText(txt);
+      alert("Copied to clipboard.");
+    } catch {
+      alert("Copy failed.");
+    }
+  };
+
+  // Quill toolbar modules
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link", "clean"],
+      [{ align: [] }]
+    ]
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header dark={dark} setDark={setDark} />
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <EssayEditor
-              essay={essay}
-              onChange={handleEssayChange}
-              onAnalyze={handleQuickAnalyze}
-              onRephrase={handleRephrase}
-            />
+    <div className="app-wrap">
+      <header className="topbar">
+        <div className="brand">🪐 Orbit AI Essay Editor</div>
+        <div className="controls">
+          <span className="counter">📝 {wordCount} words • 🔡 {charCount} chars</span>
+          <button className="theme-btn" onClick={() => setDark(!dark)}>{dark ? "☀️ Light" : "🌙 Dark"}</button>
+        </div>
+      </header>
+
+      <main className="main">
+        <section className="editor-section">
+          <ReactQuill
+            ref={quillRef}
+            value={value}
+            onChange={setValue}
+            modules={modules}
+            theme="snow"
+            placeholder="Start writing your essay..."
+            className="editor"
+          />
+
+          <div className="action-row">
+            <button onClick={handleAnalyze}>🔍 Analyze</button>
+            <button onClick={handleRephrase}>✨ Rephrase</button>
+            <button onClick={handleGrammar}>🧩 Grammar Fix</button>
+            <button onClick={handleSummarize}>📝 Summarize</button>
+            <button onClick={() => handleTone("formal")}>Formal</button>
+            <button onClick={() => handleTone("casual")}>Casual</button>
+            <button onClick={() => handleTone("concise")}>Concise</button>
+            <button onClick={handleDownload}>📥 Download</button>
           </div>
 
-          <div>
-            <FeedbackPanel
-              analysis={analysis}
-              loading={loadingAnalysis}
-              onRequestAnalyze={handleQuickAnalyze}
-            />
-            <div className="mt-6 p-4 bg-white dark:bg-slate-800 rounded-xl shadow">
-              <h3 className="text-sm font-semibold mb-2 text-slate-700 dark:text-slate-200">Tips for Demo</h3>
-              <ol className="list-decimal list-inside text-sm text-slate-600 dark:text-slate-300">
-                <li>Start with a short personal essay paragraph.</li>
-                <li>Click Analyze to show scores and suggestions.</li>
-                <li>Use Rephrase on a paragraph to demo AI power.</li>
-                <li>Toggle Dark Mode to show UI polish.</li>
-              </ol>
+          {loading && <div className="loading">🤖 AI is thinking...</div>}
+        </section>
+
+        <aside className="sidebar">
+          {analysis && (
+            <div className="card">
+              <h3>AI Feedback</h3>
+              <p>Clarity: {analysis.clarity}%</p>
+              <p>Impact: {analysis.impact}%</p>
+              <p>Readability: {analysis.readability}%</p>
+              <p>Tone: {analysis.tone}</p>
+              <ul>
+                {analysis.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
             </div>
-          </div>
-        </div>
+          )}
+
+          {rephrased && (
+            <div className="card">
+              <h3>Rephrased Versions</h3>
+              {Object.entries(rephrased).map(([k, txt]) => (
+                <div key={k} className="rephrase-box">
+                  <strong>{k}</strong>
+                  <p>{txt}</p>
+                  <div>
+                    <button onClick={() => copyTextToClipboard(txt)}>📋 Copy</button>
+                    <button onClick={() => setValue(`<p>${txt.replace(/\n/g,"<br/>")}</p>`)}>Use</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {grammarInfo && (
+            <div className="card">
+              <h3>Grammar</h3>
+              <p>{grammarInfo.message}</p>
+            </div>
+          )}
+
+          {summary && (
+            <div className="card">
+              <h3>Summary</h3>
+              <p>{summary}</p>
+            </div>
+          )}
+        </aside>
       </main>
-      <footer className="py-4 text-center text-sm text-slate-600 dark:text-slate-300">
-        Orbit AI — AI Essay Editor (Enhanced) • Demo
-      </footer>
+
+      <footer className="footer">Orbit AI — Essay Editor (Enhanced) • Demo</footer>
     </div>
-  )
+  );
 }

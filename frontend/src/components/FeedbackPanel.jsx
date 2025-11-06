@@ -2,39 +2,47 @@ import React from 'react'
 
 export default function FeedbackPanel({ analysis, loading, onRequestAnalyze }) {
   const placeholder = {
-    clarity: 10,
+    clarity: 0,
     tone: 'Neutral',
-    impact: 10,
+    impact: 0,
     suggestions: ['Write a clearer thesis sentence.', 'Add specific examples to support claims.']
   }
 
-  const data = analysis || placeholder
+  const data = analysis ?? placeholder
+
+  const clarityPercent = Math.max(0, Math.min(100, Number(data.clarity || 0)))
+  const impactPercent = Math.max(0, Math.min(100, Number(data.impact || 0)))
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">AI Feedback</h3>
-        <button onClick={onRequestAnalyze} className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700">Re-analyze</button>
+        <button
+          onClick={onRequestAnalyze}
+          className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700"
+        >
+          Re-analyze
+        </button>
       </div>
 
       <div className="space-y-3">
         <div>
           <label className="text-xs text-slate-500 dark:text-slate-300">Clarity</label>
           <div className="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded mt-1">
-            <div style={{ width: `${(data.clarity || 10)}%` }} className="h-3 bg-emerald-400 rounded"></div>
+            <div style={{ width: `${clarityPercent}%` }} className="h-3 bg-emerald-400 rounded transition-all" />
           </div>
         </div>
 
         <div>
           <label className="text-xs text-slate-500 dark:text-slate-300">Impact</label>
           <div className="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded mt-1">
-            <div style={{ width: `${(data.impact || 10)}%` }} className="h-3 bg-indigo-500 rounded"></div>
+            <div style={{ width: `${impactPercent}%` }} className="h-3 bg-indigo-500 rounded transition-all" />
           </div>
         </div>
 
         <div>
           <label className="text-xs text-slate-500 dark:text-slate-300">Tone</label>
-          <div className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">{data.tone || 'Neutral'}</div>
+          <div className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">{data.tone}</div>
         </div>
 
         <div>

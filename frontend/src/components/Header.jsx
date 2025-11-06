@@ -1,7 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { SunIcon, MoonIcon } from './icons'
 
 export default function Header({ dark, setDark }) {
+  // ensure document class is correct on mount (defensive)
+  useEffect(() => {
+    if (dark) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+  }, [dark])
+
   return (
     <header className="bg-white dark:bg-slate-900 shadow-sm">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -20,6 +26,7 @@ export default function Header({ dark, setDark }) {
             onClick={() => setDark(!dark)}
             className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Toggle dark"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
           </button>

@@ -1,77 +1,107 @@
-/* ---------- Light Theme (default) ---------- */
-html,
+/* frontend/src/App.css */
+:root {
+  --primary: #6366f1;
+  --bg: #f6f8fb;
+  --card: rgba(99,102,241,0.05);
+}
+
 body {
   margin: 0;
-  padding: 0;
-  background-color: #f3f4f6;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
   color: #111827;
-  font-family: "Inter", sans-serif;
-  transition: background-color 0.5s ease, color 0.5s ease;
-  height: 100%;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* ---------- Full-Page Dark Mode ---------- */
-.dark html,
-.dark body {
-  background-color: #0d1117;
-  color: #f9fafb;
+body.dark {
+  background: #0b1220;
+  color: #e6eef8;
 }
 
-.dark * {
-  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+.app-wrap {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 12px;
 }
 
-/* Panels and sections */
-.dark header,
-.dark nav,
-.dark main,
-.dark section,
-.dark aside,
-.dark .card,
-.dark .editor-panel,
-.dark .result-panel,
-.dark .history-panel {
-  background-color: #161b22;
-  color: #f9fafb;
-  border-color: #30363d;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-/* Textareas and inputs */
-.dark textarea,
-.dark input {
-  background-color: #0d1117;
-  color: #f9fafb;
-  border: 1px solid #30363d;
+.brand { font-weight: 600; }
+
+.controls { display: flex; gap: 10px; align-items: center; }
+
+.theme-btn {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* Buttons */
-.dark button {
-  background-color: #21262d;
-  color: #f9fafb;
-  border: 1px solid #30363d;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+.main {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
 }
 
-.dark button:hover {
-  background-color: #30363d;
-  transform: scale(1.05);
+.editor-section {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04);
 }
 
-/* Toast popup (react-toastify) */
-.dark .Toastify__toast {
-  background-color: #161b22;
-  color: #f9fafb;
+body.dark .editor-section {
+  background: #07101a;
+  box-shadow: none;
 }
 
-/* Cards and panels smooth edges */
+.editor .ql-toolbar.ql-snow {
+  border-radius: 8px 8px 0 0;
+}
+
+.editor .ql-container.ql-snow {
+  min-height: 220px;
+  border-radius: 0 0 8px 8px;
+}
+
+.action-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-row button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.loading { margin-top: 10px; font-style: italic; }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .card {
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: var(--card);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(99,102,241,0.12);
 }
 
-/* Root container fix */
-#root {
-  min-height: 100vh;
-  transition: background-color 0.4s ease, color 0.4s ease;
-}
+.rephrase-box { margin-top: 8px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; }
+
+.footer { margin-top: 18px; text-align: center; color: #6b7280; font-size: 13px; }
