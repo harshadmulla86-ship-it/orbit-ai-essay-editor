@@ -1,17 +1,21 @@
-# Stage 1: Build the React app
-FROM node:20-alpine AS build
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# Stage 2: Serve the app
+# Frontend Dockerfile
 FROM node:20-alpine
 
+# Set working directory
 WORKDIR /app
-RUN npm install -g serve
-COPY --from=build /app/dist ./dist
-EXPOSE 3000
-CMD ["serve", "-s", "dist", "-l", "3000"]
+
+# Copy dependency files and install packages
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the application
+COPY . .
+
+# Build the production app
+RUN npm run build
+
+# Expose port for Vite preview
+EXPOSE 5173
+
+# Correct CMD syntax — tell Docker to run the preview server
+CMD ["npm", "run", "preview", "--", "--host"]

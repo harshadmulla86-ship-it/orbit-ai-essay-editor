@@ -1,119 +1,105 @@
-import React, { useState, useEffect } from "react";
-import EditorPanel from "./components/EditorPanel";
-import ResultPanel from "./components/ResultPanel";
-import HistoryPanel from "./components/HistoryPanel";
-import Navbar from "./components/Navbar";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-const API_URL = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5000";
+import React, { useEffect, useState } from 'react'
+import Header from './components/Header'
+import EssayEditor from './components/EssayEditor'
+import FeedbackPanel from './components/FeedbackPanel'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 export default function App() {
-  const [essay, setEssay] = useState("");
-  const [result, setResult] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
-  const [dark, setDark] = useState(false);
+  const [essay, setEssay] = useState(localStorage.getItem('essayContent') || '')
+  const [analysis, setAnalysis] = useState(null)
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false)
+  const [dark, setDark] = useState(localStorage.getItem('dark') === '1')
 
   useEffect(() => {
-    loadHistory();
-  }, []);
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('dark', dark ? '1' : '0')
+  }, [dark])
 
   useEffect(() => {
-    setWordCount(essay.trim() ? essay.trim().split(/\s+/).length : 0);
-  }, [essay]);
-
-  useEffect(() => {
-    // Apply dark mode to full page (html + body)
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
-
-  async function analyze() {
-    if (!essay.trim()) {
-      toast.warn("Please enter an essay");
-      return;
+    // initial analysis if there is content
+    if (essay && essay.replace(/<(.|\n)*?>/g, '').trim().length > 0) {
+      analyze(essay)
     }
-    setLoading(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function analyze(htmlContent) {
+    setLoadingAnalysis(true)
     try {
-      const res = await fetch(`${API_URL}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: essay }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setResult(data.result);
-        toast.success("Analysis complete");
-      } else {
-        toast.error(data.error || "Analysis failed");
-      }
+      const plain = htmlContent.replace(/<(.|\n)*?>/g, '').trim()
+      const res = await axios.post('/api/analyze', { text: plain })
+      setAnalysis(res.data)
     } catch (err) {
-      console.error(err);
-      toast.error("Server error");
+      console.error(err)
+      toast.error('Failed to analyze essay (mock server).')
     } finally {
-      setLoading(false);
+      setLoadingAnalysis(false)
     }
   }
 
-  async function save() {
-    if (!result) {
-      toast.warn("Analyze first");
-      return;
-    }
-    try {
-      const res = await fetch(`${API_URL}/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: essay, result }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        toast.success("Saved");
-        setEssay("");
-        setResult(null);
-        loadHistory();
-      } else {
-        toast.error(data.error || "Save failed");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Save error");
-    }
+  function handleEssayChange(html) {
+    setEssay(html)
+    localStorage.setItem('essayContent', html)
   }
 
-  async function loadHistory() {
+  async function handleQuickAnalyze() {
+    if (!essay || essay.replace(/<(.|\n)*?>/g, '').trim().length === 0) {
+      toast('Write something to analyze.', { icon: '✍️' })
+      return
+    }
+    await analyze(essay)
+    toast.success('Analysis complete')
+  }
+
+  async function handleRephrase(paragraphText) {
+    // call rephrase endpoint
+    const t = toast.loading('Rephrasing...')
     try {
-      const res = await fetch(`${API_URL}/history`);
-      const data = await res.json();
-      if (data.ok) setHistory(data.history);
+      const res = await axios.post('/api/rephrase', { text: paragraphText })
+      toast.success('Rephrased', { id: t })
+      return res.data.rephrase
     } catch (err) {
-      console.warn("loadHistory failed", err);
+      toast.error('Rephrase failed', { id: t })
+      return paragraphText
     }
   }
 
   return (
-    <div className={`${dark ? "dark" : ""} min-h-screen`} id="theme-root">
-      <Navbar dark={dark} onToggle={() => setDark((d) => !d)} />
-      <main className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 space-y-4">
-          <EditorPanel
-            essay={essay}
-            setEssay={setEssay}
-            onAnalyze={analyze}
-            onSave={save}
-            loading={loading}
-            wordCount={wordCount}
-          />
-          <ResultPanel result={result} />
-        </section>
+    <div className="min-h-screen flex flex-col">
+      <Header dark={dark} setDark={setDark} />
+      <main className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <EssayEditor
+              essay={essay}
+              onChange={handleEssayChange}
+              onAnalyze={handleQuickAnalyze}
+              onRephrase={handleRephrase}
+            />
+          </div>
 
-        <aside className="space-y-4">
-          <HistoryPanel history={history} />
-        </aside>
+          <div>
+            <FeedbackPanel
+              analysis={analysis}
+              loading={loadingAnalysis}
+              onRequestAnalyze={handleQuickAnalyze}
+            />
+            <div className="mt-6 p-4 bg-white dark:bg-slate-800 rounded-xl shadow">
+              <h3 className="text-sm font-semibold mb-2 text-slate-700 dark:text-slate-200">Tips for Demo</h3>
+              <ol className="list-decimal list-inside text-sm text-slate-600 dark:text-slate-300">
+                <li>Start with a short personal essay paragraph.</li>
+                <li>Click Analyze to show scores and suggestions.</li>
+                <li>Use Rephrase on a paragraph to demo AI power.</li>
+                <li>Toggle Dark Mode to show UI polish.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
       </main>
-
-      <ToastContainer position="top-right" />
+      <footer className="py-4 text-center text-sm text-slate-600 dark:text-slate-300">
+        Orbit AI — AI Essay Editor (Enhanced) • Demo
+      </footer>
     </div>
-  );
+  )
 }

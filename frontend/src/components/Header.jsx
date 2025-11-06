@@ -1,21 +1,30 @@
-import React from "react";
-import Lottie from "lottie-react";
+import React from 'react'
+import { SunIcon, MoonIcon } from './icons'
 
-export default function Header() {
+export default function Header({ dark, setDark }) {
   return (
-    <header className="flex flex-col items-center justify-center text-center py-10 bg-gradient-to-b from-indigo-50 to-white">
-      <Lottie
-        path="https://lottie.host/b0afb2fe-f10f-403b-b61b-41086badbf45/U9tI3GGAyB.lottie"
-        loop
-        autoplay
-        style={{ width: 180, height: 180 }}
-      />
-      <h1 className="text-4xl font-bold text-indigo-700 mt-4">
-        Orbit AI Essay Editor
-      </h1>
-      <p className="text-gray-600 mt-2">
-        AI-powered essay analysis with smart feedback and modern UI ✨
-      </p>
+    <header className="bg-white dark:bg-slate-900 shadow-sm">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-white font-bold">
+            O
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Orbit AI — Essay Editor</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Real-time feedback, rephrase, export & autosave</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setDark(!dark)}
+            className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Toggle dark"
+          >
+            {dark ? <SunIcon /> : <MoonIcon />}
+          </button>
+        </div>
+      </div>
     </header>
-  );
+  )
 }
