@@ -1,0 +1,152 @@
+🌌 Orbit AI Essay Editor  
+👨‍💻 Created by HARSHAD NABISAB MULLA  
+Orbit AI Essay Editor Project  
+This project is a web-based essay editor enhanced with AI features. It allows users to write essays, analyze clarity, readability, and tone, rephrase text, fix grammar, summarize content, and apply tone transformations using AI. The backend is built with Node.js, and the frontend uses React with React Quill and Vite.
+
+## Project Structure
+
+orbit-ai-essay-editor/
+├─ backend/ # Node.js backend API
+│ ├─ .env # Environment variables
+│ ├─ package.json # Backend dependencies and scripts
+├─ frontend/ # React frontend
+│ ├─ .env.local # Frontend environment variables
+│ ├─ package.json # Frontend dependencies and scripts
+│ ├─ src/
+│ ├─ App.jsx # Main React component
+│ ├─ main.jsx # Entry point
+│ ├─ index.css # Styling
+├─ README.md # Project instructions (this file)
+
+shell
+Copy code
+
+## Setup Instructions
+
+### 1️⃣ Backend Setup
+
+```bash
+# Navigate to backend folder
+cd backend
+
+# Install dependencies
+npm install
+
+# Create a .env file with content:
+# PORT=5000
+# API_KEY=your_api_key_here  (if applicable)
+
+# Start backend server
+npm start
+Backend runs at: http://localhost:5000
+Test API endpoint: http://localhost:5000/api/analyze (POST JSON)
+
+2️⃣ Frontend Setup
+bash
+Copy code
+# Navigate to frontend folder
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Create .env.local file with content:
+# VITE_API_URL=http://localhost:5000
+
+# Run frontend in development mode
+npm run dev
+Open http://localhost:5173 in your browser.
+Hot-reloading works for development.
+
+bash
+Copy code
+# Build frontend for production
+npm run build
+
+# Install serve globally (if not installed)
+npm install -g serve
+
+# Serve the production build
+serve -s dist
+Access production version at http://localhost:3000.
+
+3️⃣ Restart Commands
+bash
+Copy code
+# Backend
+cd backend
+npm start
+
+# Frontend (dev mode)
+cd ../frontend
+npm run dev
+
+# Frontend (production serve)
+cd frontend
+serve -s dist
+
+
+4️⃣ Common Issues & Fixes
+Blank page or runtime errors:
+
+Check browser console for errors.
+
+Ensure .env.local contains correct VITE_API_URL.
+
+Ensure all CSS braces are closed (PostCSS errors can break the page).
+
+Port conflicts:
+
+Backend default: 5000
+
+Frontend dev default: 5173
+
+Use PORT environment variable to change ports.
+
+Dependencies
+Backend (package.json dependencies)
+json
+Copy code
+# Example
+"express": "^4.18.2",
+"cors": "^2.8.5",
+"dotenv": "^16.3.1",
+"body-parser": "^1.20.2"
+Frontend (package.json dependencies)
+json
+Copy code
+# Example
+"react": "^18.2.0",
+"react-dom": "^18.2.0",
+"react-quill": "^2.0.0",
+"vite": "^7.2.1",
+"tailwindcss": "^3.3.3"
+🌟 Features
+Rich text editing with React Quill
+
+Word and character counter
+
+AI-powered analysis (clarity, impact, readability, tone)
+
+Rephrasing, grammar fixing, summarizing
+
+Tone transformation (formal, casual, concise)
+
+Download essay as text file
+
+Dark/light mode toggle
+
+pgsql
+Copy code
+
+This is **formatted exactly like your Iris example**, with emojis, headers, commands, and notes all in one place—ready to paste in your repo.  
+
+If you want, I can **also add screenshots placeholders** for frontend and backend so it looks even more professional on GitHub.  
+
+Do you want me to do that?
+
+
+
+
+
+
